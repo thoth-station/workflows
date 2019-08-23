@@ -1,0 +1,39 @@
+# This workflow submits a Job which creates `n` pod replicas and runs them in a sequence.
+#
+# successCondition: `n` pods have finished successfully and are present in the cluster
+#
+# The workflow simulates the scenario when we want to create a batch of inspections.
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: inspection-batch
+  generateName: job-
+spec:
+  entrypoint: run-to-completion
+  arguments:
+    parameters:
+    - name: batch_size
+      value: 3
+  templates:
+  - name: run-to-completion
+    resource:
+      action: create
+      successCondition: status.succeeded == {{workflow.parameters.batch_size}}
+      manifest: |
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: "{{workflow.name}}"
+        spec:
+          completions: {{workflow.parameters.batch_size}}
+          template:         
+            metadata:
+              name: "{{workflow.name}}"
+              labels:
+                mark: cleanup
+            spec:
+              containers:
+              - name: fake-inspection
+                image: alpine:latest
+                command: [ "sh", "-c", "echo {{workflow.name}}; exit 0" ]
+              restartPolicy: Never
