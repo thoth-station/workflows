@@ -1,0 +1,17 @@
+---
+- name: "Playbook to provision Argo into a single namespace."
+
+  hosts: localhost
+  connection: local
+
+  # Only if not provided
+  vars_prompt:
+    - name: namespace
+      prompt: "Namespace: "
+      private: no
+ 
+  roles:
+  - role: cermakm.argo_workflows
+    tags:
+    - argo
+    - argo-workflows

@@ -1,0 +1,24 @@
+---
+- name: "Play to deprovision argo"
+
+  hosts: localhost
+  connection: local
+
+  vars:
+    namespace: argo
+
+  tasks:
+  - name: "delete argo workflow resources"
+    tags:
+      - argo
+      - argo-workflows
+    command: "oc delete -n {{ namespace }} {{ item }} --all"
+    with_items:
+      - "deployments"
+      - "configmaps"
+      - "secrets"
+      - "workflows"
+      - "jobs"
+      - "pods"
+      - "routes"
+      - "services"
