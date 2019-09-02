@@ -4,10 +4,14 @@
   hosts: localhost
   connection: local
 
+  vars_files:
+    - group_vars/provision/vars
+    - group_vars/provision/vault
+
   # Only if not provided
   vars_prompt:
     - name: namespace
-      prompt: "Namespace: "
+      prompt: "Namespace"
       private: no
  
   roles:

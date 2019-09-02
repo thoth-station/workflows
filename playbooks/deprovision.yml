@@ -4,8 +4,11 @@
   hosts: localhost
   connection: local
 
-  vars:
-    namespace: argo
+  # Only if not provided
+  vars_prompt:
+    - name: namespace
+      prompt: "Namespace"
+      private: no
 
   tasks:
   - name: "delete argo workflow resources"
