@@ -1,0 +1,59 @@
+# This is a workflow template for a workflow which looks up a collection of resources (i.e., pods)
+# and for each of them stores the output in an artifact repository.
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: collect-outputs
+spec:
+  templates:
+  - name: main
+    inputs:
+      parameters:
+      - name: kind
+        value: pods
+      - name: selector
+        value: ''
+    steps:
+    - - name: get-resources
+        arguments:
+          parameters:
+          - name: kind
+            value: "{{inputs.parameters.kind}}"
+          - name: selector
+            value: "{{inputs.parameters.selector}}"
+        template: get-resources
+    - - name: store-output
+        arguments:
+          parameters:
+          - name: resource
+            value: "{{item.name}}"
+        template: store-output
+        withParam: "{{steps.get-resources.outputs.result}}"
+
+  - name: get-resources
+    inputs:
+      parameters:
+      - name: kind
+      - name: selector
+    script:
+      image: "argoproj/argoexec:latest"
+      command: [sh]
+      source: >-
+        kubectl get {{inputs.parameters.kind}} -l {{inputs.parameters.selector}} -o json |
+        jq '.items[].metadata | { name }' |
+        jq -s .
+  
+  - name: store-output
+    inputs:
+      parameters:
+      - name: resource
+    outputs:
+      artifacts:
+      - name: output 
+        path: "/tmp/output"
+    container:
+      image: "argoproj/argoexec:latest"
+      command: [sh, -c]
+      args: ["
+        kubectl logs {{inputs.parameters.resource}} | tee /tmp/output
+      "]
