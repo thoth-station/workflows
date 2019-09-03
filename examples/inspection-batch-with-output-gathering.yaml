@@ -1,6 +1,9 @@
 # This workflow submits a Job which creates `n` pod replicas and runs them in a sequence.
 # Additionally, it mounts an artifact repository to store the resulting artifacts.
 #
+# The ouputs are stored in s3 as such:
+# s3://<bucket>/<prefix>/<workflow-name>/<workflow-step>
+#
 # NOTE: The artifact repository has to be configured via ConfigMap, see
 # https://github.com/argoproj/argo/blob/master/ARTIFACT_REPO.md
 # or use the Argo ansible role: https://github.com/CermakM/ansible-role-argo-workflows 
@@ -15,7 +18,8 @@ metadata:
   name: inspection-batch-with-output-gathering
   generateName: job-
 spec:
-  entrypoint: main
+  entrypoint: run-to-completion
+  onExit: collect-outputs
   arguments:
     parameters:
     - name: batch-size
@@ -23,21 +27,6 @@ spec:
     - name: batch-name
       value: "{{workflow.name}}"
   templates:
-  - name: main
-    steps:
-    - - name: run-to-completion
-        template: run-to-completion
-    - - name: collect-outputs
-        templateRef:
-          name: collect-outputs
-          template: main
-        arguments:
-          parameters:
-          - name: kind
-            value: pods
-          - name: selector
-            value: job-name={{workflow.name}}
-  
   - name: run-to-completion
     resource:
       action: create
@@ -65,3 +54,16 @@ spec:
                 image: alpine:latest
                 command: [ "sh", "-c", "echo {{workflow.name}}-$(date +%s) ; exit 0" ]
               restartPolicy: Never
+
+  # exit handler
+  # the outputs should always be collected and stored, even if the workflow fails
+  - name: collect-outputs
+    templateRef:
+      name: collect-outputs
+      template: main
+    arguments:
+      parameters:
+      - name: kind
+        value: pods
+      - name: selector
+        value: job-name={{workflow.name}}
