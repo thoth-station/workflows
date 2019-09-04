@@ -1,0 +1,92 @@
+# This is an example of a real Inspection workflow
+# Requirements:
+# - amun-inspect-hwinfo image is present in the given registry
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: inspection-
+spec:
+  entrypoint: main
+  # onExit: collect-outputs  # FIXME
+
+  arguments:
+    parameters:
+      # Required
+      - name: inspection-id
+        value: "{{workflow.name}}"
+      - name: batch-name
+        value: "{{workflow.parameters.inspection-id}}"
+      - name: batch-size
+      - name: specification
+      - name: thoth-infra-namespace
+      # Defaults
+      - name: cpu
+        value: "500m"
+      - name: memory
+        value: "1Gi"
+      - name: registry
+        value: 172.30.1.1:5000
+      - name: thoth-registry
+        value: 172.30.1.1:5000  # FIXME: docker-registry.default.svc:5000
+  templates:
+  - name: main
+    steps:
+    - - name: inspection-build
+        arguments:
+          parameters:
+          - name: specification
+            value: "{{workflow.parameters.specification}}"
+          - name: inspection-id
+            value: "{{workflow.parameters.inspection-id}}"
+          - name: batch-name
+            value: "{{workflow.parameters.batch-name}}"
+          - name: batch-size
+            value: "{{workflow.parameters.batch-size}}"
+          - name: cpu
+            value: "{{workflow.parameters.cpu}}"
+          - name: memory
+            value: "{{workflow.parameters.memory}}"
+          - name: registry
+            value: "{{workflow.parameters.registry}}"
+          - name: thoth-infra-namespace
+            value: "{{workflow.parameters.thoth-infra-namespace}}"
+          - name: thoth-registry
+            value: "{{workflow.parameters.thoth-registry}}"
+        templateRef:
+          name: inspection-build-template
+          template: main
+    - - name: inspection-run
+        arguments:
+          parameters:
+          - name: batch-name
+            value: "{{workflow.parameters.batch-name}}"
+          - name: batch-size
+            value: "{{workflow.parameters.batch-size}}"
+          - name: inspection-id
+            value: "{{workflow.parameters.inspection-id}}"
+          - name: cpu
+            value: "{{workflow.parameters.cpu}}"
+          - name: memory
+            value: "{{workflow.parameters.memory}}"
+          - name: registry
+            value: "{{workflow.parameters.registry}}"
+          - name: thoth-infra-namespace
+            value: "{{workflow.parameters.thoth-infra-namespace}}"
+          - name: thoth-registry
+            value: "{{workflow.parameters.thoth-registry}}"
+        templateRef:
+          name: inspection-run-template
+          template: main
+
+  # exit handler
+  # the outputs should always be collected and stored, even if the workflow fails
+  - name: collect-outputs
+    templateRef:
+      name: collect-outputs-template
+      template: main
+    arguments:
+      parameters:
+      - name: kind
+        value: pods
+      - name: selector
+        value: "job-name={{workflow.parameters.batch-name}}"
