@@ -54,7 +54,7 @@ spec:
         arguments:
           parameters:
           - name: dockerfile
-            value: '{{steps.create-dockerfile.outputs.parameters.dockerfile}}'
+            value: '{{steps.dockerfile.outputs.parameters.dockerfile}}'
           - name: inspection-id
             value: "{{inputs.parameters.inspection-id}}"
           - name: specification

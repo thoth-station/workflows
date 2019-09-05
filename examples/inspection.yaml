@@ -7,7 +7,7 @@ metadata:
   generateName: inspection-
 spec:
   entrypoint: main
-  # onExit: collect-outputs  # FIXME
+  onExit: collect-outputs
 
   arguments:
     parameters:
@@ -20,6 +20,10 @@ spec:
       - name: specification
       - name: thoth-infra-namespace
       # Defaults
+      - name: allowed-failures
+        value: '1'  # i.e., 99% success rate out of 100
+      - name: parallelism
+        value: '1'
       - name: cpu
         value: "500m"
       - name: memory
@@ -38,10 +42,14 @@ spec:
             value: "{{workflow.parameters.specification}}"
           - name: inspection-id
             value: "{{workflow.parameters.inspection-id}}"
+          - name: allowed-failures
+            value: "{{workflow.parameters.allowed-failures}}"
           - name: batch-name
             value: "{{workflow.parameters.batch-name}}"
           - name: batch-size
             value: "{{workflow.parameters.batch-size}}"
+          - name: parallelism
+            value: "{{workflow.parameters.parallelism}}"
           - name: cpu
             value: "{{workflow.parameters.cpu}}"
           - name: memory

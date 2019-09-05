@@ -36,11 +36,9 @@ spec:
       - name: thoth-registry
         value: 172.30.1.1:5000  # FIXME: docker-registry.default.svc:5000
     steps:
-    - - name: run
+    - - name: job
         arguments:
           parameters:
-          - name: allowed-failures
-            value: "{{inputs.parameters.allowed-failures}}"
           - name: batch-name
             value: "{{inputs.parameters.batch-name}}"
           - name: batch-size
@@ -59,12 +57,21 @@ spec:
             value: "{{inputs.parameters.thoth-registry}}"
           - name: thoth-infra-namespace
             value: "{{inputs.parameters.thoth-infra-namespace}}"
-        template: run
+        template: create-job
+    - - name: inspection
+        arguments:
+          parameters:
+          - name: allowed-failures
+            value: "{{inputs.parameters.allowed-failures}}"
+          - name: batch-name
+            value: "{{inputs.parameters.batch-name}}"
+          - name: batch-size
+            value: "{{inputs.parameters.batch-size}}"
+        template: await-inspection
     
-  - name: run
+  - name: create-job
     inputs:
       parameters:
-      - name: allowed-failures
       - name: inspection-id
       - name: batch-name
       - name: batch-size
@@ -76,19 +83,19 @@ spec:
       - name: thoth-registry
     resource:
       action: create
-      successCondition: status.succeeded == {{inputs.parameters.batch-size}}
-      failureCondition: status.failed > {{inputs.parameters.allowed-failures}}
       manifest: |
         apiVersion: batch/v1
         kind: Job
         metadata:
-          name: "{{inputs.parameters.inspection-id}}"
+          name: "{{inputs.parameters.batch-name}}"
           labels:
               app: amun
               component: amun-inspection-job
+              amun/template: amun-inspection-job
+              amun/inspection-id: "{{inputs.parameters.inspection-id}}"
+              amun/task: inspection
               operator: graph-sync
-              task: inspection
-              amun_template: amun-inspection-job
+              mark: cleanup
           ownerReferences:
           - apiVersion: argoproj.io/v1alpha1
             kind: Workflow
@@ -99,13 +106,14 @@ spec:
           parallelism: {{inputs.parameters.parallelism}}
           template:         
             metadata:
-              name: "{{inputs.parameters.batch-name}}"
+              name: "{{inputs.parameters.batch-name}}-job"
               labels:
                 app: amun
-                amun_template: amun-inspection-job
-                batch.size: "{{inputs.parameters.batch-size}}"
-                batch.name: "{{inputs.parameters.batch-name}}"
                 component: amun-inspection-job
+                amun/inspection-id: "{{inputs.parameters.inspection-id}}"
+                amun/batch-size: "{{inputs.parameters.batch-size}}"
+                amun/batch-name: "{{inputs.parameters.batch-name}}"
+                amun/task: inspection
             spec:
               automountServiceAccountToken: false
               restartPolicy: Never
@@ -138,3 +146,19 @@ spec:
               volumes:
                 - name: hw-info-volume
                   emptyDir: {}
+
+  - name: await-inspection
+    inputs:
+      parameters:
+      - name: allowed-failures
+      - name: batch-name
+      - name: batch-size
+    resource:
+      action: get
+      successCondition: status.succeeded == {{inputs.parameters.batch-size}}
+      failureCondition: status.failed > {{inputs.parameters.allowed-failures}}
+      manifest: |
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: "{{inputs.parameters.batch-name}}"
