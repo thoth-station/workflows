@@ -15,13 +15,7 @@
     tags:
       - argo
       - argo-workflows
-    command: "oc delete -n {{ namespace }} {{ item }} --all"
-    with_items:
-      - "deployments"
-      - "configmaps"
-      - "secrets"
-      - "workflows"
-      - "jobs"
-      - "pods"
-      - "routes"
-      - "services"
+    command: >-
+      oc delete -n {{ namespace }} all \
+        -l ansible/role=argo-workflows \
+        -l ansible/overlay=openshift
