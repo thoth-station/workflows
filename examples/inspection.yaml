@@ -12,12 +12,13 @@ spec:
   arguments:
     parameters:
       # Required
+      - name: batch-size
+      - name: dockerfile
+      - name: specification
       - name: inspection-id
         value: "{{workflow.name}}"
       - name: batch-name
         value: "{{workflow.parameters.inspection-id}}"
-      - name: batch-size
-      - name: specification
       - name: thoth-infra-namespace
       # Defaults
       - name: allowed-failures
@@ -38,6 +39,8 @@ spec:
     - - name: inspection-build
         arguments:
           parameters:
+          - name: dockerfile
+            value: "{{workflow.parameters.dockerfile}}"
           - name: specification
             value: "{{workflow.parameters.specification}}"
           - name: inspection-id
@@ -46,8 +49,6 @@ spec:
             value: "{{workflow.parameters.allowed-failures}}"
           - name: batch-name
             value: "{{workflow.parameters.batch-name}}"
-          - name: batch-size
-            value: "{{workflow.parameters.batch-size}}"
           - name: parallelism
             value: "{{workflow.parameters.parallelism}}"
           - name: cpu
