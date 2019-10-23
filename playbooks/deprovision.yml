@@ -8,14 +8,14 @@
   vars_prompt:
     - name: namespace
       prompt: "Namespace"
-      private: no
+      private: false
 
   tasks:
-  - name: "delete argo workflow resources"
-    tags:
-      - argo
-      - argo-workflows
-    command: >-
-      oc delete -n {{ namespace }} all \
-        -l ansible/role=argo-workflows \
-        -l ansible/overlay=openshift
+    - name: "delete argo workflow resources"
+      tags:
+        - argo
+        - argo-workflows
+      command: >-
+        oc delete -n {{ namespace }} all \
+          -l ansible/role=argo-workflows \
+          -l ansible/overlay=openshift

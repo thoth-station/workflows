@@ -12,10 +12,10 @@
   vars_prompt:
     - name: namespace
       prompt: "Namespace"
-      private: no
- 
+      private: false
+
   roles:
-  - role: cermakm.argo_workflows
-    tags:
-    - argo
-    - argo-workflows
+    - role: cermakm.argo_workflows
+      tags:
+        - argo
+        - argo-workflows
