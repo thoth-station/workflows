@@ -1,6 +1,10 @@
 overlay: "openshift"
+role: "developer"
 
-ARTIFACT_REPOSITORY: "s3"
+executor: "k8sapi"
+
+archiveLogs: false
+artifactRepository: "s3"
 AWS_S3_HOST: "{{ vault_AWS_S3_HOST }}"
 AWS_S3_BUCKET_NAME: "{{ vault_AWS_S3_BUCKET_NAME }}"
 AWS_S3_BUCKET_PREFIX: "{{ vault_AWS_S3_BUCKET_PREFIX }}"
