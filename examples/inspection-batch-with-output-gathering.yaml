@@ -18,8 +18,15 @@ metadata:
   name: inspection-batch-with-output-gathering
   generateName: job-
 spec:
+  serviceAccountName: argo
+
   entrypoint: run-to-completion
   onExit: collect-outputs
+
+  volumes:
+    - name: outputDir
+      emptyDir: {}
+
   arguments:
     parameters:
     - name: batch-size
@@ -43,7 +50,7 @@ spec:
             uid: "{{workflow.uid}}"
         spec:
           completions: {{workflow.parameters.batch-size}}
-          template:         
+          template:
             metadata:
               name: "{{workflow.name}}"
               labels:
@@ -51,7 +58,7 @@ spec:
             spec:
               containers:
               - name: fake-inspection
-                image: alpine:latest
+                image: registry.access.redhat.com/ubi8/ubi-minimal
                 command: [ "sh", "-c", "echo {{workflow.name}}-$(date +%s) ; exit 0" ]
               restartPolicy: Never
 
@@ -59,10 +66,12 @@ spec:
   # the outputs should always be collected and stored, even if the workflow fails
   - name: collect-outputs
     templateRef:
-      name: collect-outputs
+      name: collect-outputs-template
       template: main
     arguments:
       parameters:
+      - name: volume
+        value: outputDir
       - name: kind
         value: pods
       - name: selector

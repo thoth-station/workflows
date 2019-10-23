@@ -9,6 +9,7 @@ spec:
   - name: main
     inputs:
       parameters:
+      - name: volume
       - name: kind
         value: pods
       - name: selector
@@ -27,6 +28,8 @@ spec:
           parameters:
           - name: resource
             value: "{{item.name}}"
+          - name: volume
+            value: "{{inputs.parameters.volume}}"
         template: store-output
         withParam: "{{steps.get-resources.outputs.result}}"
 
@@ -42,18 +45,26 @@ spec:
         kubectl get {{inputs.parameters.kind}} -l {{inputs.parameters.selector}} -o json |
         jq '.items[].metadata | { name }' |
         jq -s .
-  
+
   - name: store-output
     inputs:
       parameters:
       - name: resource
+      - name: volume
     outputs:
       artifacts:
-      - name: output 
-        path: "/tmp/output"
+      - name: output
+        path: "/mnt/output/artifact"
     container:
       image: "argoproj/argoexec:latest"
       command: [sh, -c]
       args: ["
-        kubectl logs {{inputs.parameters.resource}} | tee /tmp/output
+        kubectl logs {{inputs.parameters.resource}} | tee /mnt/output/artifact
       "]
+      # Required so that `kubelet/k8sapi` executors could gather outputs
+      # NOTE: The volume has to be created by the caller's workflow, since
+      # WorkflowTemplateSpec does not allow to specify volumes
+      # see https://github.com/argoproj/argo/blob/master/pkg/apis/workflow/v1alpha1/workflow_template_types.go
+      volumeMounts:
+      - name: '{{inputs.parameters.volume}}'
+        mountPath: /mnt/output
