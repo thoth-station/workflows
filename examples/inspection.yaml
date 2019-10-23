@@ -1,38 +1,45 @@
 # This is an example of a real Inspection workflow
 # Requirements:
 # - amun-inspect-hwinfo image is present in the given registry
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: inspection-
 spec:
+  serviceAccountName: argo
+
   entrypoint: main
   onExit: collect-outputs
 
+  volumes:
+  - name: outputDir
+    emptyDir: {}
+
   arguments:
     parameters:
-      # Required
-      - name: batch-size
-      - name: dockerfile
-      - name: specification
-      - name: inspection-id
-        value: "{{workflow.name}}"
-      - name: batch-name
-        value: "{{workflow.parameters.inspection-id}}"
-      - name: thoth-infra-namespace
-      # Defaults
-      - name: allowed-failures
-        value: '1'  # i.e., 99% success rate out of 100
-      - name: parallelism
-        value: '1'
-      - name: cpu
-        value: "500m"
-      - name: memory
-        value: "1Gi"
-      - name: registry
-        value: 172.30.1.1:5000
-      - name: thoth-registry
-        value: 172.30.1.1:5000  # FIXME: docker-registry.default.svc:5000
+    # Required
+    - name: batch-size
+    - name: dockerfile
+    - name: specification
+    - name: inspection-id
+      value: "{{workflow.name}}"
+    - name: batch-name
+      value: "{{workflow.parameters.inspection-id}}"
+    - name: thoth-infra-namespace
+    # Defaults
+    - name: allowed-failures
+      value: '1'  # i.e., 99% success rate out of 100
+    - name: parallelism
+      value: '1'
+    - name: cpu
+      value: "500m"
+    - name: memory
+      value: "1Gi"
+    - name: registry
+      value: 172.30.1.1:5000
+    - name: thoth-registry
+      value: 172.30.1.1:5000  # FIXME: docker-registry.default.svc:5000
   templates:
   - name: main
     steps:
@@ -99,3 +106,5 @@ spec:
         value: pods
       - name: selector
         value: "job-name={{workflow.parameters.batch-name}}"
+      - name: volume
+        value: outputDir

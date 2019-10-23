@@ -4,6 +4,7 @@
 #
 # successCondition: `n` pods have finished successfully and are present in the cluster
 # failureCondition: there are more failures than is allowed (a constant to account for potential flakes)
+---
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
@@ -68,7 +69,7 @@ spec:
           - name: batch-size
             value: "{{inputs.parameters.batch-size}}"
         template: await-inspection
-    
+
   - name: create-job
     inputs:
       parameters:
@@ -104,7 +105,7 @@ spec:
         spec:
           completions: {{inputs.parameters.batch-size}}
           parallelism: {{inputs.parameters.parallelism}}
-          template:         
+          template:
             metadata:
               name: "{{inputs.parameters.batch-name}}-job"
               labels:
@@ -118,34 +119,35 @@ spec:
               automountServiceAccountToken: false
               restartPolicy: Never
               containers:
-                - name: inspect
-                  env: []
-                  image: "{{inputs.parameters.inspection-id}}:latest"
-                  livenessProbe:
-                    failureThreshold: 1
-                    initialDelaySeconds: 3600
-                    periodSeconds: 10
-                    tcpSocket:
-                      port: 80
-                  resources:
-                    limits:
-                      memory: "{{inputs.parameters.memory}}"
-                      cpu: "{{inputs.parameters.cpu}}"
-                    requests:
-                      memory: "{{inputs.parameters.memory}}"
-                      cpu: "{{inputs.parameters.cpu}}"
-                  volumeMounts:
-                    - mountPath: /home/amun/hwinfo
-                      name: hw-info-volume
+              - name: inspect
+                env: []
+                image: "{{inputs.parameters.inspection-id}}:latest"
+                livenessProbe:
+                  failureThreshold: 1
+                  initialDelaySeconds: 3600
+                  periodSeconds: 10
+                  tcpSocket:
+                    port: 80
+                resources:
+                  limits:
+                    memory: "{{inputs.parameters.memory}}"
+                    cpu: "{{inputs.parameters.cpu}}"
+                  requests:
+                    memory: "{{inputs.parameters.memory}}"
+                    cpu: "{{inputs.parameters.cpu}}"
+                volumeMounts:
+                  - mountPath: /home/amun/hwinfo
+                    name: hw-info-volume
               initContainers:
-                - name: inspect-hwinfo
-                  image: "{{inputs.parameters.thoth-registry}}/{{inputs.parameters.thoth-infra-namespace}}/inspect-hwinfo"
-                  volumeMounts:
-                    - mountPath: /home/amun/hwinfo
-                      name: hw-info-volume
+              - name: inspect-hwinfo
+                image: |
+                  {{inputs.parameters.thoth-registry}}/{{inputs.parameters.thoth-infra-namespace}}/inspect-hwinfo
+                volumeMounts:
+                  - mountPath: /home/amun/hwinfo
+                    name: hw-info-volume
               volumes:
-                - name: hw-info-volume
-                  emptyDir: {}
+              - name: hw-info-volume
+                emptyDir: {}
 
   - name: await-inspection
     inputs:
