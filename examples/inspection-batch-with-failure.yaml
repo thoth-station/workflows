@@ -13,6 +13,8 @@ metadata:
   name: inspection-batch-with-failure
   generateName: job-
 spec:
+  serviceAccountName: argo
+
   entrypoint: main
   arguments:
     parameters:
@@ -40,7 +42,7 @@ spec:
           name: "{{workflow.name}}"
         spec:
           completions: {{workflow.parameters.batch_size}}
-          template:         
+          template:
             metadata:
               name: "{{workflow.name}}"
               labels:
@@ -48,11 +50,11 @@ spec:
             spec:
               containers:
               - name: fake-inspection-with-failure
-                image: alpine:latest
+                image: registry.access.redhat.com/ubi8/ubi-minimal
                 command: [ "sh", "-c", "echo {{workflow.name}}; exit 1" ]
               restartPolicy: Never
-    
-  # There needs to be a patch after the workflow fails, otherwise the submitted Job 
+
+  # There needs to be a patch after the workflow fails, otherwise the submitted Job
   # would keep spawning new pods
   - name: stop
     resource:
