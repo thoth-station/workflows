@@ -9,11 +9,14 @@ metadata:
   name: inspection-batch
   generateName: job-
 spec:
+  serviceAccountName: argo
+
   entrypoint: run-to-completion
   arguments:
     parameters:
     - name: batch_size
-      value: 3
+      value: '3'
+
   templates:
   - name: run-to-completion
     resource:
@@ -26,7 +29,7 @@ spec:
           name: "{{workflow.name}}"
         spec:
           completions: {{workflow.parameters.batch_size}}
-          template:         
+          template:
             metadata:
               name: "{{workflow.name}}"
               labels:
@@ -34,6 +37,6 @@ spec:
             spec:
               containers:
               - name: fake-inspection
-                image: alpine:latest
+                image: registry.access.redhat.com/ubi8/ubi-minimal
                 command: [ "sh", "-c", "echo {{workflow.name}}; exit 0" ]
               restartPolicy: Never
