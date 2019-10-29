@@ -9,7 +9,7 @@ max_lines_per_file = 2000
 bears = YAMLLintBear
 files = **.yaml, **.yml
 ignore = .zuul.yaml
-max_line_length = 120
+yamllint_config = .yamllint
 
 [zuul.yaml]
 bears = YAMLLintBear
