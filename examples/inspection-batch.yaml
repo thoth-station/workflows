@@ -3,6 +3,7 @@
 # successCondition: `n` pods have finished successfully and are present in the cluster
 #
 # The workflow simulates the scenario when we want to create a batch of inspections.
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
