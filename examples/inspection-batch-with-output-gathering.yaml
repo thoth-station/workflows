@@ -6,12 +6,13 @@
 #
 # NOTE: The artifact repository has to be configured via ConfigMap, see
 # https://github.com/argoproj/argo/blob/master/ARTIFACT_REPO.md
-# or use the Argo ansible role: https://github.com/CermakM/ansible-role-argo-workflows 
+# or use the Argo ansible role: https://github.com/CermakM/ansible-role-argo-workflows
 #
 # successCondition: `n` pods have finished successfully and are present in the cluster
 #
 # The workflow simulates the scenario when we want to create a batch of inspections
 # and store the outputs to the artifact store.
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
@@ -24,8 +25,8 @@ spec:
   onExit: collect-outputs
 
   volumes:
-    - name: outputDir
-      emptyDir: {}
+  - name: outputDir
+    emptyDir: {}
 
   arguments:
     parameters:
