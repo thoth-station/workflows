@@ -7,6 +7,7 @@
 #
 # The workflow simulates the scenario when we want to create a batch of inspections but the stack is faulty
 # and we don't want to pollute the namespace unnecessarily with failed pods.
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
