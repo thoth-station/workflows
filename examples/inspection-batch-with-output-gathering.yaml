@@ -76,4 +76,4 @@ spec:
       - name: kind
         value: pods
       - name: selector
-        value: job-name={{workflow.name}}
+        value: "job-name={{workflow.name}}"

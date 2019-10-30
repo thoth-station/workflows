@@ -11,3 +11,24 @@ You will be asked a namespace to with the Argo should be provisioned and a passw
 ```bash
 ansible-playbook playbooks/provision.yml --ask-vault-pass
 ```
+
+## Submitting workflows
+
+See [How to write Argo Workflows](https://github.com/argoproj/argo/blob/master/examples/README.md) for the getting started.
+
+To submit a more complicated workflow (i.e., the [inspection](/examples/inspection.yaml)), first make sure that all the templates have been created.
+
+```bash
+kubectl create --namespace ${ARGO_NAMESPACE} -f examples/templates
+```
+
+And now to submit the [inspection](/examples/inspection.yaml) workflow using the [parameters](/examples/parameters.json) file:
+
+```bash
+argo submit --watch examples/inspection.yaml \
+    --name inspection-131719234 \
+    -p batch-size=${BATCH_SIZE} \
+    -p parallelism=${PARALLELISM} \
+    -p thoth-infra-namespace=${ARGO_NAMESPACE} \
+    -f examples/parameters.json
+```
