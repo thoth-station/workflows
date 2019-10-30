@@ -1,0 +1,79 @@
+# This workflow submits a Job which creates `n` pod replicas and runs them in a sequence.
+# Additionally, it mounts an artifact repository to store the resulting artifacts.
+#
+# The ouputs are stored in s3 as such:
+# s3://<bucket>/<prefix>/<workflow-name>/<workflow-step>
+#
+# NOTE: The artifact repository has to be configured via ConfigMap, see
+# https://github.com/argoproj/argo/blob/master/ARTIFACT_REPO.md
+# or use the Argo ansible role: https://github.com/CermakM/ansible-role-argo-workflows
+#
+# successCondition: `n` pods have finished successfully and are present in the cluster
+#
+# The workflow simulates the scenario when we want to create a batch of inspections
+# and store the outputs to the artifact store.
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: inspection-batch-with-output-gathering
+  generateName: job-
+spec:
+  serviceAccountName: argo
+
+  entrypoint: run-to-completion
+  onExit: collect-outputs
+
+  volumes:
+  - name: outputDir
+    emptyDir: {}
+
+  arguments:
+    parameters:
+    - name: batch-size
+      value: 3
+    - name: batch-name
+      value: "{{workflow.name}}"
+  templates:
+  - name: run-to-completion
+    resource:
+      action: create
+      successCondition: status.succeeded == {{workflow.parameters.batch-size}}
+      manifest: |
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: "{{workflow.name}}"
+          ownerReferences:
+          - apiVersion: argoproj.io/v1alpha1
+            kind: Workflow
+            name: "{{workflow.name}}"
+            uid: "{{workflow.uid}}"
+        spec:
+          completions: {{workflow.parameters.batch-size}}
+          template:
+            metadata:
+              name: "{{workflow.name}}"
+              labels:
+                batch: "{{workflow.parameters.batch-name}}"
+            spec:
+              containers:
+              - name: fake-inspection
+                image: registry.access.redhat.com/ubi8/ubi-minimal
+                command: [ "sh", "-c", "echo {{workflow.name}}-$(date +%s) ; exit 0" ]
+              restartPolicy: Never
+
+  # exit handler
+  # the outputs should always be collected and stored, even if the workflow fails
+  - name: collect-outputs
+    templateRef:
+      name: collect-outputs-template
+      template: main
+    arguments:
+      parameters:
+      - name: volume
+        value: outputDir
+      - name: kind
+        value: pods
+      - name: selector
+        value: job-name={{workflow.name}}
