@@ -1,0 +1,69 @@
+# This workflow submits a Job which creates `n` pod replicas and runs them in a sequence
+# The pod which is being ran is faulty and fails. The workflow is supposed to wait untill
+# a certain amount of job failures appear and fail as well.
+#
+# successCondition: `n` pods have finished successfully and are present in the cluster
+# failureCondition: there are more failures than is allowed (a constant to account for potential flakes)
+#
+# The workflow simulates the scenario when we want to create a batch of inspections but the stack is faulty
+# and we don't want to pollute the namespace unnecessarily with failed pods.
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: inspection-batch-with-failure
+  generateName: job-
+spec:
+  serviceAccountName: argo
+
+  entrypoint: main
+  arguments:
+    parameters:
+    - name: batch_size
+      value: 5
+    - name: allowed_failures
+      value: 2
+  onExit: stop
+
+  templates:
+  - name: main
+    steps:
+    - - name: run
+        template: run-to-completion
+
+  - name: run-to-completion
+    resource:
+      action: create
+      successCondition: status.succeeded == {{workflow.parameters.batch_size}}
+      failureCondition: status.failed > {{workflow.parameters.allowed_failures}}
+      manifest: |
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: "{{workflow.name}}"
+        spec:
+          completions: {{workflow.parameters.batch_size}}
+          template:
+            metadata:
+              name: "{{workflow.name}}"
+              labels:
+                mark: cleanup
+            spec:
+              containers:
+              - name: fake-inspection-with-failure
+                image: registry.access.redhat.com/ubi8/ubi-minimal
+                command: [ "sh", "-c", "echo {{workflow.name}}; exit 1" ]
+              restartPolicy: Never
+
+  # There needs to be a patch after the workflow fails, otherwise the submitted Job
+  # would keep spawning new pods
+  - name: stop
+    resource:
+      action: patch
+      manifest: |
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: "{{workflow.name}}"
+        spec:
+          parallelism: 0
