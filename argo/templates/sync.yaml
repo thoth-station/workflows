@@ -13,17 +13,35 @@ spec:
     - name: solver
       inputs:
         parameters:
+          - name: THOTH_SOLVER_DOCUMENT_ID
           - name: THOTH_FORCE_SYNC
-            value: "3"
+        artifacts:
+          - name: solver-document
+            path: /mnt/solver/document
+            s3:
+              key: "{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}.tgz"
+              endpoint: "s3.upshift.redhat.com"
+              bucket: "thoth"
+              insecure: true
+              accessKeySecret:
+                name: argo-artifact-repository
+                key: accessKey
+              secretKeySecret:
+                name: argo-artifact-repository
+                key: secretKey
       container:
         name: graph-sync
         image: graph-sync-job
-        command: ["sh", "-c", "ls -Rtl /mnt/output/; exit 0"]
+        command: [sh, -c]
+        args:
+          [
+            "cat /mnt/solver/document/{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}",
+          ]
         env:
           - name: THOTH_ONLY_SOLVER_DOCUMENTS
             value: "1"
           - name: THOTH_SYNC_DOCUMENT_ID
-            value: "foobar"
+            value: "{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
           - name: THOTH_FORCE_SYNC
             value: "{{workflow.parameters.THOTH_FORCE_SYNC}}"
           - name: THOTH_DEPLOYMENT_NAME
@@ -106,6 +124,3 @@ spec:
           requests:
             cpu: 250m
             memory: 256Mi
-        volumeMounts:
-          - name: solver-document
-            mountPath: /mnt/output
