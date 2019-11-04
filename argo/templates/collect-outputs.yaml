@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: collect-outputs
+  annotations:
+    thoth-station.ninja/template-version: 0.10.0-dev
+  labels:
+    app: thoth
+    component: collect-outputs
+spec:
+  templates:
+    - name: main
+      inputs:
+        parameters:
+          - name: volume
+      steps:
+        - - name: store-output
+            arguments:
+              parameters:
+                - name: volume
+                  value: "{{inputs.parameters.volume}}"
+            template: store-output
+
+    - name: store-output
+      inputs:
+        parameters:
+          - name: volume
+      outputs:
+        artifacts:
+          - name: output
+            path: "/mnt/output"
+      container:
+        image: "argoproj/argoexec:latest"
+        command: [sh, -c]
+        args:
+          [
+            "cat /mnt/output/solver-{{workflow.uid}}.json | tee /tmp/solver-{{workflow.uid}}.json",
+          ]
+        volumeMounts:
+          - name: "{{inputs.parameters.volume}}"
+            mountPath: "/mnt/output"
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi

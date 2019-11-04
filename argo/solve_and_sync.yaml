@@ -10,22 +10,24 @@ metadata:
     component: solver
     solver-type: solver-rhel-8.0-py36
 spec:
+  volumes:
+    - name: solver-document
+      emptyDir: {}
+
   serviceAccountName: argo
   entrypoint: solve-and-sync
+
   arguments:
     parameters:
+      - name: THOTH_SOLVER_DOCUMENT_ID
       - name: THOTH_LOG_SOLVER
-        value: INFO
+        value: "INFO"
       - name: THOTH_SOLVER_NO_TRANSITIVE
-        value: "1"
+        value: 1
       - name: THOTH_SOLVER_PACKAGES
         value: "tensorflow==2.0.0"
-      - name: THOTH_SOLVER_OUTPUT
-        value: "-"
       - name: THOTH_SOLVER_INDEXES
         value: "https://pypi.org/simple"
-      - name: THOTH_SYNC_DOCUMENT_ID
-        value: "7"
       - name: THOTH_FORCE_SYNC
         value: "1"
   templates:
@@ -40,14 +42,14 @@ spec:
               template: solve
             arguments:
               parameters:
+                - name: THOTH_SOLVER_DOCUMENT_ID
+                  value: "{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
                 - name: THOTH_LOG_SOLVER
                   value: "{{workflow.parameters.THOTH_LOG_SOLVER}}"
                 - name: THOTH_SOLVER_NO_TRANSITIVE
                   value: "{{workflow.parameters.THOTH_SOLVER_NO_TRANSITIVE}}"
                 - name: THOTH_SOLVER_PACKAGES
                   value: "{{workflow.parameters.THOTH_SOLVER_PACKAGES}}"
-                - name: THOTH_SOLVER_OUTPUT
-                  value: "{{workflow.parameters.THOTH_SOLVER_OUTPUT}}"
                 - name: THOTH_SOLVER_INDEXES
                   value: "{{workflow.parameters.THOTH_SOLVER_INDEXES}}"
 
@@ -59,7 +61,53 @@ spec:
               template: solver
             arguments:
               parameters:
-                - name: THOTH_SYNC_DOCUMENT_ID
-                  value: "{{workflow.parameters.THOTH_SYNC_DOCUMENT_ID}}"
                 - name: THOTH_FORCE_SYNC
                   value: "{{workflow.parameters.THOTH_FORCE_SYNC}}"
+
+          # - name: store-to-s3
+          #   dependencies:
+          #     - solve
+          #   templateRef:
+          #     name: collect-outputs
+          #     template: store-output
+          #   arguments:
+          #     parameters:
+          #       - name: volume
+          #         value: solver-document
+
+          - name: dump
+            dependencies:
+              - solve
+            template: dump-solver-document
+
+    - name: dump-solver-document
+      inputs:
+        artifacts:
+          - name: solver-document
+            path: "/mnt/solver/document"
+            s3:
+              endpoint: "s3.upshift.redhat.com"
+              bucket: "thoth"
+              key: "data/thoth/thoth-core-psi-test/argo/artifacts/"
+              insecure: true
+              accessKeySecret:
+                name: argo-artifact-repository
+                key: accessKey
+              secretKeySecret:
+                name: argo-artifact-repository
+                key: secretKey
+
+      container:
+        image: "argoproj/argoexec:latest"
+        command: [sh, -c]
+        args: ["ls -laR /mnt/solver/document /mnt/output"]
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        volumeMounts:
+          - name: solver-document
+            mountPath: /mnt/output
