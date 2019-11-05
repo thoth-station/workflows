@@ -58,6 +58,9 @@ spec:
               name: graph-sync
               template: solver
             arguments:
+              artifacts:
+                - name: solver-document
+                  from: "{{tasks.solve.outputs.artifacts.solver-document}}"
               parameters:
                 - name: THOTH_SOLVER_DOCUMENT_ID
                   value: "{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
@@ -68,23 +71,16 @@ spec:
             dependencies:
               - solve
             template: dump-solver-document
+            arguments:
+              artifacts:
+                - name: solver-document
+                  from: "{{tasks.solve.outputs.artifacts.solver-document}}"
 
     - name: dump-solver-document
       inputs:
         artifacts:
           - name: solver-document
-            path: "/mnt/solver/document"
-            s3:
-              key: "{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}.tgz"
-              endpoint: "s3.upshift.redhat.com"
-              bucket: "thoth"
-              insecure: true
-              accessKeySecret:
-                name: argo-artifact-repository
-                key: accessKey
-              secretKeySecret:
-                name: argo-artifact-repository
-                key: secretKey
+            path: /mnt/solver/document
       container:
         image: "argoproj/argoexec:latest"
         command: [sh, -c]
