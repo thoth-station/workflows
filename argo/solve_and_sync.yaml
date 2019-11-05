@@ -14,7 +14,8 @@ spec:
   entrypoint: solve-and-sync
   arguments:
     parameters:
-      - name: THOTH_SOLVER_DOCUMENT_ID # should not have dots?! s3 problem?!
+      # should not have dots?! s3 problem?!
+      - name: THOTH_SOLVER_DOCUMENT_ID
       - name: THOTH_LOG_SOLVER
         value: "INFO"
       - name: THOTH_SOLVER_NO_TRANSITIVE
