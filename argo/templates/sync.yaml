@@ -18,11 +18,11 @@ spec:
         artifacts:
           - name: solver-document
             path: /mnt/solver/document
+      retryStrategy:
+        limit: 10
       container:
         name: graph-sync
         image: graph-sync-job
-        command: [sh, -c]
-        args: ["ls -Rtl /mnt/solver/document/"]
         env:
           - name: THOTH_ONLY_SOLVER_DOCUMENTS
             value: "1"

@@ -2,13 +2,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  generateName: solver-rhel-8.0-py36-
+  generateName: solver-
   annotations:
     thoth-station.ninja/template-version: 0.10.0-dev
   labels:
     app: thoth
     component: solver
-    solver-type: solver-rhel-8.0-py36
 spec:
   serviceAccountName: argo
   entrypoint: solve-and-sync
@@ -34,9 +33,9 @@ spec:
         archiveLogs: true
       dag:
         tasks:
-          - name: solve
+          - name: solverhel80py36
             templateRef:
-              name: solver
+              name: solver-rhel-8.0-py36
               template: solve
             arguments:
               parameters:
@@ -53,14 +52,14 @@ spec:
 
           - name: graph-sync
             dependencies:
-              - solve
+              - solverhel80py36
             templateRef:
               name: graph-sync
               template: solver
             arguments:
               artifacts:
                 - name: solver-document
-                  from: "{{tasks.solve.outputs.artifacts.solver-document}}"
+                  from: "{{tasks.solverhel80py36.outputs.artifacts.solver-document}}"
               parameters:
                 - name: THOTH_SOLVER_DOCUMENT_ID
                   value: "{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
@@ -69,24 +68,24 @@ spec:
 
           - name: debug-dump-solver-document
             dependencies:
-              - solve
+              - solverhel80py36
             template: dump-solver-document
             arguments:
               artifacts:
                 - name: solver-document
-                  from: "{{tasks.solve.outputs.artifacts.solver-document}}"
+                  from: "{{tasks.solverhel80py36.outputs.artifacts.solver-document}}"
 
     - name: dump-solver-document
       inputs:
         artifacts:
           - name: solver-document
-            path: /mnt/solver/document
+            path: "/mnt/solver/document/{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
       container:
         image: "argoproj/argoexec:latest"
         command: [sh, -c]
         args:
           [
-            "cat /mnt/solver/document/{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}",
+            "cat /mnt/solver/document/{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json",
           ]
         resources:
           limits:
