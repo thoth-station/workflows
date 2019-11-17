@@ -24,10 +24,14 @@ spec:
         name: graph-sync
         image: graph-sync-job
         env:
+          - name: THOTH_LOG_GRAPH_SYNC_JOB
+            value: "DEBUG"
           - name: THOTH_ONLY_SOLVER_DOCUMENTS
             value: "1"
+          - name: THOTH_SYNC_LOCAL_FILE
+            value: "True"
           - name: THOTH_SYNC_DOCUMENT_ID
-            value: "{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
+            value: "/mnt/solver/document/{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
           - name: THOTH_FORCE_SYNC
             value: "{{workflow.parameters.THOTH_FORCE_SYNC}}"
           - name: THOTH_DEPLOYMENT_NAME

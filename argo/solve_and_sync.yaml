@@ -23,7 +23,7 @@ spec:
       - name: THOTH_SOLVER_INDEXES
         value: "https://pypi.org/simple"
       - name: THOTH_FORCE_SYNC
-        value: "0"
+        value: "1"
   volumes:
     - name: workdir
       emptyDir: {}
@@ -33,7 +33,7 @@ spec:
         archiveLogs: true
       dag:
         tasks:
-          - name: solverhel80py36
+          - name: solverrhel80py36
             templateRef:
               name: solver-rhel-8.0-py36
               template: solve
@@ -50,16 +50,16 @@ spec:
                 - name: THOTH_SOLVER_INDEXES
                   value: "{{workflow.parameters.THOTH_SOLVER_INDEXES}}"
 
-          - name: graph-sync
+          - name: graph-sync-solverrhel80py36
             dependencies:
-              - solverhel80py36
+              - solverrhel80py36
             templateRef:
               name: graph-sync
               template: solver
             arguments:
               artifacts:
                 - name: solver-document
-                  from: "{{tasks.solverhel80py36.outputs.artifacts.solver-document}}"
+                  from: "{{tasks.solverrhel80py36.outputs.artifacts.solver-document}}"
               parameters:
                 - name: THOTH_SOLVER_DOCUMENT_ID
                   value: "{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
@@ -68,12 +68,12 @@ spec:
 
           - name: debug-dump-solver-document
             dependencies:
-              - solverhel80py36
+              - solverrhel80py36
             template: dump-solver-document
             arguments:
               artifacts:
                 - name: solver-document
-                  from: "{{tasks.solverhel80py36.outputs.artifacts.solver-document}}"
+                  from: "{{tasks.solverrhel80py36.outputs.artifacts.solver-document}}"
 
     - name: dump-solver-document
       inputs:

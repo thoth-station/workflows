@@ -24,11 +24,11 @@ spec:
       outputs:
         artifacts:
           - name: solver-document
-            path: "/mnt/workdir/{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
+            path: "/mnt/workdir/solver-rhel-8.0-py36-{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
             archive:
               none: {}
             s3:
-              key: "argo/solver/{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
+              key: "argo/solver/solver-rhel-8.0-py36-{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
               endpoint: "s3.upshift.redhat.com"
               bucket: "thoth"
               insecure: true
@@ -49,6 +49,8 @@ spec:
         env:
           - name: THOTH_SOLVER
             value: solver-rhel-8.0-py36
+          - name: THOTH_SOLVER_VIRTUALENV
+            value: "/home/solver/venv"
           - name: THOTH_LOG_SOLVER
             value: "{{inputs.parameters.THOTH_LOG_SOLVER}}"
           - name: THOTH_SOLVER_NO_TRANSITIVE
@@ -56,7 +58,7 @@ spec:
           - name: THOTH_SOLVER_PACKAGES
             value: "{{inputs.parameters.THOTH_SOLVER_PACKAGES}}"
           - name: THOTH_SOLVER_OUTPUT
-            value: "/mnt/workdir/{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
+            value: "/mnt/workdir/solver-rhel-8.0-py36-{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
           - name: THOTH_SOLVER_INDEXES
             value: "{{inputs.parameters.THOTH_SOLVER_INDEXES}}"
           - name: SENTRY_DSN
