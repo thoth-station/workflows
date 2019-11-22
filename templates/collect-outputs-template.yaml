@@ -10,15 +10,24 @@ spec:
   - name: main
     inputs:
       parameters:
+      # Required
       - name: volume
+      # Default
       - name: kind
         value: pods
       - name: selector
         value: ''
+      - name: registry
+        value: docker-registry.default.svc:5000
+      - name: thoth-infra-namespace
+        value: "{{workflow.namespace}}"
     steps:
     - - name: get-resources
         arguments:
           parameters:
+          - name: image
+            value: |-
+              {{inputs.parameters.registry}}/{{inputs.parameters.thoth-infra-namespace}}/kubectl
           - name: kind
             value: "{{inputs.parameters.kind}}"
           - name: selector
@@ -27,8 +36,11 @@ spec:
     - - name: store-output
         arguments:
           parameters:
+          - name: image
+            value: |-
+              {{inputs.parameters.registry}}/{{inputs.parameters.thoth-infra-namespace}}/kubectl
           - name: resource
-            value: "{{item.name}}"
+            value: "{{item}}"
           - name: volume
             value: "{{inputs.parameters.volume}}"
         template: store-output
@@ -37,19 +49,25 @@ spec:
   - name: get-resources
     inputs:
       parameters:
+      - name: image
       - name: kind
       - name: selector
     script:
-      image: "argoproj/argoexec:latest"
+      image: "{{inputs.parameters.image}}"
       command: [sh]
       source: >-
         kubectl get {{inputs.parameters.kind}} -l {{inputs.parameters.selector}} -o json |
         jq '.items[].metadata | { name }' |
         jq -s .
+      resource:
+        limits:
+          cpu: 100m
+          memory: 32Mi
 
   - name: store-output
     inputs:
       parameters:
+      - name: image
       - name: resource
       - name: volume
     outputs:
@@ -57,7 +75,7 @@ spec:
       - name: output
         path: "/mnt/output/artifact"
     container:
-      image: "argoproj/argoexec:latest"
+      image: "{{inputs.parameters.image}}"
       command: [sh, -c]
       args: ["
         kubectl logs {{inputs.parameters.resource}} | tee /mnt/output/artifact
@@ -66,6 +84,10 @@ spec:
       # NOTE: The volume has to be created by the caller's workflow, since
       # WorkflowTemplateSpec does not allow to specify volumes
       # see https://github.com/argoproj/argo/blob/master/pkg/apis/workflow/v1alpha1/workflow_template_types.go
+      resource:
+        limits:
+          cpu: 100m
+          memory: 32Mi
       volumeMounts:
       - name: '{{inputs.parameters.volume}}'
         mountPath: /mnt/output
