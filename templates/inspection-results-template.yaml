@@ -1,0 +1,58 @@
+# This is a workflow template for a workflow which looks up a collection of resources (i.e., pods)
+# and for each of them stores the output in an artifact repository.
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: inspection-results-template
+spec:
+  templates:
+  - name: main
+    inputs:
+      parameters:
+      # Required
+      - name: volume
+      # Default
+      - name: namespace
+        value: "{{workflow.namespace}}"
+      - name: kind
+        value: pods
+      - name: selector
+        value: ''
+      - name: registry
+        value: docker-registry.default.svc:5000
+      - name: thoth-infra-namespace
+        value: "{{workflow.namespace}}"
+    outputs:
+      artifacts:
+      - name: output
+        path: "/mnt/output/results"
+    script:
+      image: |-
+        {{inputs.parameters.registry}}/{{inputs.parameters.thoth-infra-namespace}}/kubectl
+      command: [sh]
+      source: |-
+        results=/mn/output/results ; mkdir -p /mnt/output/results
+
+        kubectl get \
+          {{inputs.parameters.kind}} \
+          --namespace {{inputs.parameters.namespace}} \
+          --selector {{inputs.parameters.selector}} \
+          --output json |\
+        jq -c '.items[].metadata.name' |\
+        xargs -I{} sh -c 'kubectl logs {} > $results/{}.json'
+
+        # Output logs for easier debugging
+        cat $results/*.json | jq -s
+
+      resources:
+        limits:
+          cpu: 100m
+          memory: 32Mi
+      # Required so that `kubelet/k8sapi` executors could gather outputs
+      # NOTE: The volume has to be created by the caller's workflow, since
+      # WorkflowTemplateSpec does not allow to specify volumes
+      # see https://github.com/argoproj/argo/blob/master/pkg/apis/workflow/v1alpha1/workflow_template_types.go
+      volumeMounts:
+      - name: "{{inputs.parameters.volume}}"
+        mountPath: /mnt/output
