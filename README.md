@@ -12,7 +12,9 @@ You will be asked a namespace to with the Argo should be provisioned and a passw
 ansible-playbook playbooks/provision.yml --ask-vault-pass
 ```
 
-## Submitting workflows with Argo CLI
+## Submitting workflows
+
+### Using the Argo CLI
 
 See [How to write Argo Workflows](https://github.com/argoproj/argo/blob/master/examples/README.md) for the getting started.
 
@@ -33,7 +35,17 @@ argo submit --watch examples/inspection.yaml \
     -f examples/parameters.json
 ```
 
-## Submitting workflows via Python
+### Submitting workflows via Python
 
 See examples [notebooks](https://github.com/thoth-station/notebooks/blob/master/notebooks/workflows/amun-inspection-workflow.ipynb) or check [thoth.common.workflows](https://github.com/thoth-station/common/blob/public-workflow-methods/thoth/common/workflows.py).
 
+### Submitting a Solver Workflows
+
+Solver workflows require a few WorkflowTemplate: `oc apply -f argo/templates/` and if this prerequisite is fulfilled, a Workflow can be created using:
+
+```shell
+argo submit --watch argo/solve_and_sync.yaml \
+    --parameter THOTH_SOLVER_NAME=rhel-8.0-py36 \
+    --parameter THOTH_SOLVER_DOCUMENT_ID=20191126115542 \
+    --parameter THOTH_SOLVER_PACKAGES="tensorflow==2.0.0"
+```

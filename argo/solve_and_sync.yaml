@@ -13,16 +13,16 @@ spec:
   entrypoint: solve-and-sync
   arguments:
     parameters:
-      # should not have dots?! s3 problem?!
-      - name: THOTH_SOLVER_DOCUMENT_ID
-      - name: THOTH_LOG_SOLVER
+      - name: "THOTH_SOLVER_NAME"
+      - name: "THOTH_SOLVER_DOCUMENT_ID"
+      - name: "THOTH_LOG_SOLVER"
         value: "INFO"
-      - name: THOTH_SOLVER_NO_TRANSITIVE
+      - name: "THOTH_SOLVER_NO_TRANSITIVE"
         value: 1
-      - name: THOTH_SOLVER_PACKAGES
-      - name: THOTH_SOLVER_INDEXES
+      - name: "THOTH_SOLVER_PACKAGES"
+      - name: "THOTH_SOLVER_INDEXES"
         value: "https://pypi.org/simple"
-      - name: THOTH_FORCE_SYNC
+      - name: "THOTH_FORCE_SYNC"
         value: "1"
   volumes:
     - name: workdir
@@ -35,19 +35,21 @@ spec:
         tasks:
           - name: solverrhel80py36
             templateRef:
-              name: solver-rhel-8.0-py36
+              name: "solver-{{workflow.parameters.THOTH_SOLVER_NAME}}"
               template: solve
             arguments:
               parameters:
-                - name: THOTH_SOLVER_DOCUMENT_ID
+                - name: "THOTH_SOLVER_NAME"
+                  value: "{{workflow.parameters.THOTH_SOLVER_NAME}}"
+                - name: "THOTH_SOLVER_DOCUMENT_ID"
                   value: "{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
-                - name: THOTH_LOG_SOLVER
+                - name: "THOTH_LOG_SOLVER"
                   value: "{{workflow.parameters.THOTH_LOG_SOLVER}}"
-                - name: THOTH_SOLVER_NO_TRANSITIVE
+                - name: "THOTH_SOLVER_NO_TRANSITIVE"
                   value: "{{workflow.parameters.THOTH_SOLVER_NO_TRANSITIVE}}"
-                - name: THOTH_SOLVER_PACKAGES
+                - name: "THOTH_SOLVER_PACKAGES"
                   value: "{{workflow.parameters.THOTH_SOLVER_PACKAGES}}"
-                - name: THOTH_SOLVER_INDEXES
+                - name: "THOTH_SOLVER_INDEXES"
                   value: "{{workflow.parameters.THOTH_SOLVER_INDEXES}}"
 
           - name: graph-sync-solverrhel80py36
@@ -61,9 +63,11 @@ spec:
                 - name: solver-document
                   from: "{{tasks.solverrhel80py36.outputs.artifacts.solver-document}}"
               parameters:
-                - name: THOTH_SOLVER_DOCUMENT_ID
+                - name: "THOTH_SOLVER_NAME"
+                  value: "rhel-8.0-py36"
+                - name: "THOTH_SOLVER_DOCUMENT_ID"
                   value: "{{workflow.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
-                - name: THOTH_FORCE_SYNC
+                - name: "THOTH_FORCE_SYNC"
                   value: "{{workflow.parameters.THOTH_FORCE_SYNC}}"
 
           - name: debug-dump-solver-document
