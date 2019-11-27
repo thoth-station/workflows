@@ -46,6 +46,6 @@ Solver workflows require a few WorkflowTemplate: `oc apply -f argo/templates/` a
 ```shell
 argo submit --watch argo/solve_and_sync.yaml \
     --parameter THOTH_SOLVER_NAME=rhel-8.0-py36 \
-    --parameter THOTH_SOLVER_DOCUMENT_ID=20191126115542 \
+    --parameter THOTH_SOLVER_JOB_ID=20191126115542 \
     --parameter THOTH_SOLVER_PACKAGES="tensorflow==2.0.0"
 ```

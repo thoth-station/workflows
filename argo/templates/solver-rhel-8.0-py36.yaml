@@ -13,23 +13,22 @@ spec:
     - name: solve
       inputs:
         parameters:
-          - name: "THOTH_SOLVER_NAME"
-          - name: THOTH_SOLVER_DOCUMENT_ID
-          - name: THOTH_LOG_SOLVER
+          - name: "THOTH_SOLVER_DOCUMENT_ID"
+          - name: "THOTH_LOG_SOLVER"
             value: "INFO"
-          - name: THOTH_SOLVER_NO_TRANSITIVE
+          - name: "THOTH_SOLVER_NO_TRANSITIVE"
             value: "1"
-          - name: THOTH_SOLVER_PACKAGES
-          - name: THOTH_SOLVER_INDEXES
+          - name: "THOTH_SOLVER_PACKAGES"
+          - name: "THOTH_SOLVER_INDEXES"
             value: "https://pypi.org/simple"
       outputs:
         artifacts:
           - name: solver-document
-            path: "/mnt/workdir/solver-{{inputs.parameters.THOTH_SOLVER_NAME}}-{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
+            path: "/mnt/workdir/{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
             archive:
               none: {}
             s3:
-              key: "argo/solver/solver-{{inputs.parameters.THOTH_SOLVER_NAME}}-{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
+              key: "argo/solver/{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
               endpoint: "s3.upshift.redhat.com"
               bucket: "thoth"
               insecure: true
@@ -54,19 +53,21 @@ spec:
           - name: THOTH_SOLVER_PACKAGES
             value: "{{inputs.parameters.THOTH_SOLVER_PACKAGES}}"
           - name: THOTH_SOLVER_OUTPUT
-            value: "/mnt/workdir/solver-{{inputs.parameters.THOTH_SOLVER_NAME}}-{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
+            value: "/mnt/workdir/{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
           - name: THOTH_SOLVER_INDEXES
             value: "{{inputs.parameters.THOTH_SOLVER_INDEXES}}"
-          - name: SENTRY_DSN
-            valueFrom:
-              secretKeyRef:
-                name: thoth
-                key: sentry-dsn
+          - name: "THOTH_DOCUMENT_ID"
+            value: "{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
           - name: THOTH_DEPLOYMENT_NAME
             valueFrom:
               configMapKeyRef:
                 key: storage-bucket-name
                 name: thoth
+          - name: SENTRY_DSN
+            valueFrom:
+              secretKeyRef:
+                name: thoth
+                key: sentry-dsn
         volumeMounts:
           - name: workdir
             mountPath: /mnt/workdir

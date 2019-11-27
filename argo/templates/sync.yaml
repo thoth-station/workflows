@@ -13,31 +13,29 @@ spec:
     - name: solver
       inputs:
         parameters:
-          - name: "THOTH_SOLVER_NAME"
           - name: "THOTH_SOLVER_DOCUMENT_ID"
           - name: "THOTH_FORCE_SYNC"
         artifacts:
           - name: "solver-document"
-            path: "/mnt/solver/document"
+            path: "/mnt/solver/document/{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
       retryStrategy:
-        limit: 10
+        limit: 5
       container:
         name: "graph-sync"
         image: "graph-sync-job"
-        # workingDir: "/mnt/solver/document"
         env:
-          - name: "CWD" # do we need this?
-            value: "/mnt/solver/document"
-          - name: "THOTH_LOG_GRAPH_SYNC_JOB"
-            value: "DEBUG"
           - name: "THOTH_ONLY_SOLVER_DOCUMENTS"
             value: "1"
+          - name: "THOTH_DOCUMENT_ID"
+            value: "{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
           - name: "THOTH_SYNC_LOCAL_FILE"
             value: "True"
           - name: "THOTH_SYNC_DOCUMENT_ID"
-            value: "/mnt/solver/document/solver-{{inputs.parameters.THOTH_SOLVER_NAME}}-{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}.json"
+            value: "/mnt/solver/document/{{inputs.parameters.THOTH_SOLVER_DOCUMENT_ID}}"
           - name: "THOTH_FORCE_SYNC"
             value: "{{inputs.parameters.THOTH_FORCE_SYNC}}"
+          - name: "THOTH_LOG_GRAPH_SYNC_JOB"
+            value: "DEBUG"
           - name: "THOTH_DEPLOYMENT_NAME"
             valueFrom:
               configMapKeyRef:
