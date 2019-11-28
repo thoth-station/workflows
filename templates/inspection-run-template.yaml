@@ -22,20 +22,19 @@ spec:
       - name: batch-name
       - name: batch-size
       - name: inspection-id
-      - name: thoth-infra-namespace
       # Defaults
       - name: allowed-failures
         value: '1'  # i.e., 99% success rate out of 100
       - name: parallelism
         value: '1'
       - name: cpu
-        value: "500m"
+        value: "750m"
       - name: memory
         value: "1Gi"
       - name: registry
-        value: 172.30.1.1:5000
-      - name: thoth-registry
-        value: 172.30.1.1:5000  # FIXME: docker-registry.default.svc:5000
+        value: docker-registry.default.svc:5000
+      - name: thoth-infra-namespace
+        value: "{{workflow.namespace}}"
     steps:
     - - name: job
         arguments:
@@ -54,8 +53,6 @@ spec:
             value: "{{inputs.parameters.parallelism}}"
           - name: registry
             value: "{{inputs.parameters.registry}}"
-          - name: thoth-registry
-            value: "{{inputs.parameters.thoth-registry}}"
           - name: thoth-infra-namespace
             value: "{{inputs.parameters.thoth-infra-namespace}}"
         template: create-job
@@ -81,7 +78,6 @@ spec:
       - name: parallelism
       - name: registry
       - name: thoth-infra-namespace
-      - name: thoth-registry
     resource:
       action: create
       manifest: |
@@ -140,8 +136,8 @@ spec:
                     name: hw-info-volume
               initContainers:
               - name: inspect-hwinfo
-                image: |
-                  {{inputs.parameters.thoth-registry}}/{{inputs.parameters.thoth-infra-namespace}}/inspect-hwinfo
+                image: |-
+                  {{inputs.parameters.registry}}/{{inputs.parameters.thoth-infra-namespace}}/inspect-hwinfo
                 volumeMounts:
                   - mountPath: /home/amun/hwinfo
                     name: hw-info-volume
