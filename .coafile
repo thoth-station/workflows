@@ -1,6 +1,6 @@
 [all]
 bears = LineCountBear, FilenameBear
-files = **.yaml, **.toml, **.rst, **.md
+files = **.yaml, **.md
 file_naming_convention = snake
 max_line_length = 120
 max_lines_per_file = 2000
