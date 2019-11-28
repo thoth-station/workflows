@@ -4,6 +4,7 @@ oc delete workflow $(oc get workflows -o=jsonpath='{.items[?(@.status.phase=="Su
 
 for w in $( oc get workflows -o=jsonpath='{.items[?(@.status.phase=="Error")].metadata.name}' ); do
     argo retry $w
+    sleep 7
 done
 
 #end.

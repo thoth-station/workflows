@@ -79,13 +79,13 @@ spec:
       inputs:
         artifacts:
           - name: solver-document
-            path: "/mnt/solver/document/{{workflow.parameters.THOTH_SOLVER_NAME}}-{{workflow.parameters.THOTH_SOLVER_WORKFLOW_ID}}"
+            path: "/mnt/solver/document/{{workflow.parameters.THOTH_SOLVER_WORKFLOW_ID}}"
       container:
         image: "argoproj/argoexec:latest"
         command: [sh, -c]
         args:
           [
-            "cat /mnt/solver/document/{{workflow.parameters.THOTH_SOLVER_NAME}}-{{workflow.parameters.THOTH_SOLVER_WORKFLOW_ID}}",
+            "cat /mnt/solver/document/{{workflow.parameters.THOTH_SOLVER_WORKFLOW_ID}}",
           ]
         resources:
           limits:
