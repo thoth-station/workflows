@@ -3,14 +3,15 @@
 set -o errexit          # Exit on most errors
 set -o nounset          # Disallow expansion of unset variables
 set -o pipefail         # Use last non-zero exit code in a pipeline
-set -o xtrace           # Trace the execution of the script (debug)
+# set -o xtrace           # Trace the execution of the script (debug)
 
 
 NAMESPACE=${1:-"thoth-test-core"}
 OC_CMD="oc --namespace ${NAMESPACE} "
-
+OC_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
 
 echo "starting reconciliation loop for Solver Workflows in namespace '${NAMESPACE}'"
+oc login --insecure-skip-tls-verify=true ${KUBERNETES_API_URL} --token=${OC_TOKEN}
 oc project $NAMESPACE  # we just do this to exit fast on failure (namespace not accessible)
 
 while :

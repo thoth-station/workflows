@@ -1,0 +1,77 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: solver-workflow-reconciler-buildconfig
+  annotations:
+    description: "Thoth: Solver Workflow Reconciler BuildConfig Template"
+    openshift.io/display-name: "Solver Workflow Reconciler BuildConfig"
+    version: 0.1.0
+    tags: thoth,ai-stacks,aistacks,solver,machinlearning
+    template.openshift.io/documentation-url: https://github.com/Thoth-Station/
+    template.openshift.io/long-description: >
+      This template defines resources needed to run solvers in Thoth.
+    template.openshift.io/provider-display-name: "Red Hat, Inc."
+  labels:
+    app: thoth
+    component: solver-workflow-reconciler
+    template: solver-workflow-reconciler-buildconfig
+
+parameters:
+  - description: Name of the GitHub repository
+    displayName: Git Repository
+    required: true
+    name: GITHUB_URL
+    value: "https://github.com/thoth-station/workflows"
+
+  - description: Git reference to be used
+    displayName: Git Reference
+    required: true
+    name: GITHUB_REF
+    value: "master"
+
+  - description: Tag of the output ImageStream the resulting container image should go to
+    displayName: ImageStream Tag
+    required: true
+    name: IMAGE_STREAM_TAG
+    value: "latest"
+
+objects:
+  - kind: BuildConfig
+    apiVersion: v1
+    metadata:
+      name: solver-workflow-reconciler
+      annotations:
+        thoth-station.ninja/template-version: 0.1.0
+      labels:
+        app: thoth
+        component: solver-workflow-reconciler
+    spec:
+      strategy:
+        type: Docker
+        dockerStrategy:
+          from:
+            kind: ImageStreamTag
+            name: "thoth-ops:latest"
+      source:
+        type: Git
+        git:
+          uri: ${GITHUB_URL}
+          ref: ${GITHUB_REF}
+      output:
+        to:
+          kind: ImageStreamTag
+          name: "solver-workflow-reconciler:${IMAGE_STREAM_TAG}"
+      resources:
+        limits:
+          memory: "512Mi"
+          cpu: "500m"
+        requests:
+          memory: "512Mi"
+          cpu: "500m"
+      triggers:
+        - type: ImageChange
+          imageChange: {}
+        - type: "Generic"
+          generic:
+            secretReference:
+              name: generic-webhook-secret
