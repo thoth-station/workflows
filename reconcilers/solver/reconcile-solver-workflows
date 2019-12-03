@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -o errexit          # Exit on most errors
+set -o nounset          # Disallow expansion of unset variables
+set -o pipefail         # Use last non-zero exit code in a pipeline
+set -o xtrace           # Trace the execution of the script (debug)
+
+
+NAMESPACE=${1:-"thoth-test-core"}
+OC_CMD="oc --namespace ${NAMESPACE} "
+
+
+echo "starting reconciliation loop for Solver Workflows in namespace '${NAMESPACE}'"
+oc project $NAMESPACE  # we just do this to exit fast on failure (namespace not accessible)
+
+# this might give an error, but we dont care...
+$OC_CMD delete workflow $($OC_CMD get workflows -o=jsonpath='{.items[?(@.status.phase=="Succeeded")].metadata.name}') || true
+
+while :
+do
+    echo "looping..."
+    for wf in $($OC_CMD get workflows -o=jsonpath='{.items[?(@.status.phase=="Error")].metadata.name}' ); do
+        argo retry $wf
+        sleep 7
+        $OC_CMD delete workflow $($OC_CMD get workflows -o=jsonpath='{.items[?(@.status.phase=="Succeeded")].metadata.name}')
+    done
+
+    sleep 15
+done
+
+#end.
