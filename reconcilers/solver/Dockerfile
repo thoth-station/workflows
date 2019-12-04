@@ -1,4 +1,4 @@
-FROM quay.io/thoth-station/thoth-ops:v0.15.0
+FROM quay.io/thoth-station/thoth-ops:latest
 
 COPY reconcile-solver-workflows /opt/redhat/thoth/
 
