@@ -1,0 +1,33 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: solver-workflow-reconciler-imagestream
+  annotations:
+    description: "Thoth: Solver Workflow Reconciler ImageStream Template"
+    openshift.io/display-name: "Solver Workflow Reconciler ImageStream"
+    version: 0.1.0
+    tags: thoth,ai-stacks,aistacks,solver,machinlearning
+    template.openshift.io/documentation-url: https://github.com/Thoth-Station/
+    template.openshift.io/long-description: >
+      This template defines resources needed to run solvers in Thoth.
+    template.openshift.io/provider-display-name: "Red Hat, Inc."
+  labels:
+    app: thoth
+    component: solver-workflow-reconciler
+    template: solver-workflow-reconciler-imagestream
+
+objects:
+  - kind: ImageStream
+    apiVersion: v1
+    metadata:
+      labels:
+        app: thoth
+        component: solver-workflow-reconciler
+      annotations:
+        thoth-station.ninja/template-version: 0.1.0
+      name: solver-workflow-reconciler
+    spec:
+      name: latest
+      lookupPolicy:
+        local: true

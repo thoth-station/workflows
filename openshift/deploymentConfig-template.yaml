@@ -1,0 +1,81 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: solver-workflow-reconciler
+  annotations:
+    description: "Thoth: Solver Workflow Reconciler DeploymentConfig Template"
+    openshift.io/display-name: "Solver Workflow Reconciler DeploymentConfig"
+    version: 0.1.0
+    tags: thoth,ai-stacks,aistacks,solver,machinlearning
+    template.openshift.io/documentation-url: https://github.com/Thoth-Station/
+    template.openshift.io/long-description: >
+      This template defines resources needed to run solvers in Thoth.
+    template.openshift.io/provider-display-name: "Red Hat, Inc."
+  labels:
+    app: thoth
+    component: solver-workflow-reconciler
+    template: solver-workflow-reconciler
+
+parameters:
+  - description: Registry of the ImageStream to be used is living in
+    displayName: ImageStream Registry
+    required: true
+    name: IMAGE_STREAM_REGISTRY
+    value: "quay.io"
+
+  - description: Namespace of the ImageStream to be used is liveing in
+    displayName: ImageStream Project
+    required: true
+    name: IMAGE_STREAM_NAMESPACE
+    value: "thoth-station"
+
+  - description: Tag of the ImageStream to be used
+    displayName: ImageStream Tag
+    required: true
+    name: IMAGE_STREAM_TAG
+    value: "v0.1.0"
+
+objects:
+  - apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      name: solver-workflow-reconciler
+      labels:
+        app: thoth
+        component: solver-workflow-reconciler
+        thoth-station.ninja/template-version: 0.1.0
+    spec:
+      serviceAccountName: thoth-ops
+      replicas: 1
+      selector:
+        run: solver-workflow-reconciler
+      template:
+        metadata:
+          labels:
+            app: thoth
+            component: solver-workflow-reconciler
+        spec:
+          containers:
+            - image: "${IMAGE_STREAM_REGISTRY}/${IMAGE_STREAM_NAMESPACE}/workflow-reconcilers:${IMAGE_STREAM_TAG}"
+              imagePullPolicy: Always
+              name: solver-workflow-reconciler
+              args:
+                - "$(NAMESPACE)"
+              env:
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: KUBERNETES_API_URL
+                  value: "https://kubernetes.default.svc.cluster.local"
+              resources:
+                requests:
+                  cpu: 250m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+      test: false
+      triggers:
+        - type: ConfigChange
