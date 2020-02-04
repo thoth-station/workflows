@@ -16,20 +16,20 @@ spec:
           - name: "THOTH_DOCUMENT_ID"
           - name: "THOTH_FORCE_SYNC"
         artifacts:
-          - name: "document"
-            path: "/mnt/component/document/{{inputs.parameters.THOTH_DOCUMENT_ID}}"
+          - name: outputdocument
+            path: "/mnt/output/{{inputs.parameters.THOTH_DOCUMENT_ID}}"
       retryStrategy:
         limit: 5
       container:
         name: "graph-sync"
-        image: "graph-sync-job"
+        image: "quay.io/thoth-station/graph-sync-job:v0.6.0-dev"
         env:
           - name: "THOTH_DOCUMENT_ID"
             value: "{{inputs.parameters.THOTH_DOCUMENT_ID}}"
           - name: "THOTH_SYNC_LOCAL_FILE"
             value: "1"
           - name: "THOTH_SYNC_DOCUMENT_ID"
-            value: "/mnt/component/document/{{inputs.parameters.THOTH_DOCUMENT_ID}}"
+            value: "/mnt/output/{{inputs.parameters.THOTH_DOCUMENT_ID}}"
           - name: "THOTH_FORCE_SYNC"
             value: "{{inputs.parameters.THOTH_FORCE_SYNC}}"
           - name: "THOTH_LOG_GRAPH_SYNC_JOB"
@@ -107,6 +107,9 @@ spec:
               secretKeyRef:
                 name: postgresql
                 key: database-name
+        volumeMounts:
+          - name: output
+            mountPath: /mnt/output
         resources:
           limits:
             cpu: 250m
