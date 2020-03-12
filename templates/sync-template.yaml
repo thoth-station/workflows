@@ -4,7 +4,7 @@ kind: WorkflowTemplate
 metadata:
   name: graph-sync
   annotations:
-    thoth-station.ninja/template-version: 0.10.0-dev
+    thoth-station.ninja/template-version: 0.6.0-dev
   labels:
     app: thoth
     component: graph-sync
@@ -15,14 +15,20 @@ spec:
         parameters:
           - name: "THOTH_DOCUMENT_ID"
           - name: "THOTH_FORCE_SYNC"
+          - name: "IMAGE_STREAM_REGISTRY"
+          - name: "IMAGE_STREAM_NAMESPACE"
+          - name: "IMAGE_STREAM_TAG"
         artifacts:
           - name: "document"
             path: "/mnt/component/document/{{inputs.parameters.THOTH_DOCUMENT_ID}}"
       retryStrategy:
-        limit: 5
+        limit: 3
       container:
         name: "graph-sync"
-        image: "graph-sync-job"
+        image: >
+          "{{inputs.parameters.IMAGE_STREAM_REGISTRY}}/
+          {{inputs.parameters.IMAGE_STREAM_NAMESPACE}}/
+          graph-sync-job:{{inputs.parameters.IMAGE_STREAM_TAG}}"
         env:
           - name: "THOTH_DOCUMENT_ID"
             value: "{{inputs.parameters.THOTH_DOCUMENT_ID}}"
