@@ -19,16 +19,15 @@ spec:
           - name: "IMAGE_STREAM_NAMESPACE"
           - name: "IMAGE_STREAM_TAG"
         artifacts:
-          - name: "document"
+          - name: "outputdocument"
             path: "/mnt/component/document/{{inputs.parameters.THOTH_DOCUMENT_ID}}"
       retryStrategy:
         limit: 3
       container:
         name: "graph-sync"
-        image: >
-          "{{inputs.parameters.IMAGE_STREAM_REGISTRY}}/
-          {{inputs.parameters.IMAGE_STREAM_NAMESPACE}}/
-          graph-sync-job:{{inputs.parameters.IMAGE_STREAM_TAG}}"
+        image: "{{inputs.parameters.IMAGE_STREAM_REGISTRY}}/\
+        {{inputs.parameters.IMAGE_STREAM_NAMESPACE}}/\
+        graph-sync-job:{{inputs.parameters.IMAGE_STREAM_TAG}}"
         env:
           - name: "THOTH_DOCUMENT_ID"
             value: "{{inputs.parameters.THOTH_DOCUMENT_ID}}"
