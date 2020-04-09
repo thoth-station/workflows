@@ -33,10 +33,10 @@ spec:
               bucket: "thoth"
               insecure: true
               accessKeySecret:
-                name: argo-artifact-repository
+                name: argo-artifact-repository-secrets
                 key: accessKey
               secretKeySecret:
-                name: argo-artifact-repository
+                name: argo-artifact-repository-secrets
                 key: secretKey
       container:
         name: solver
